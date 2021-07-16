@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      containers:
+      - image: wordpress:4.8-apache
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: {RDS Host}
+        - name: WORDPRESS_DB_NAME
+          value: {Name DB}
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-db-credential
+              key: DB_PASSWORD
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-db-credential
+              key: DB_USER
+        volumeMounts:
+        - name: wordpress-persistent
+          mountPath: /var/www/html
+        ports:
+        - containerPort: 80
+          name: wordpress
+      volumes:
+      - name: wordpress-persistent
+        persistentVolumeClaim:
+          claimName: pv-wp-claim
